@@ -7,14 +7,13 @@ import (
 
 type Task struct {
 	gorm.Model
-	ID          int
-	Title       string
-	Description string
-	Status      string
-	AssigneeID  int
-	CreatorID   int
+	Title       string    `json:"title" binding:"required"`
+	Description string    `json:"description"`
+	Status      string    `json:"status" binding:"required"`
+	AssigneeID  int       `json:"assignee_id" binding:"required"`
+	CreatorID   int       `json:"creator_id" binding:"required"`
+	Priority    int       `json:"priority" binding:"required"`
+	DueDate     time.Time `json:"due_date" binding:"required"`
 	Assignee    User
 	Creator     User
-	Priority    int
-	DueDate     time.Time
 }

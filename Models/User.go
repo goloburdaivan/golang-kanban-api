@@ -8,14 +8,15 @@ import (
 
 type User struct {
 	gorm.Model
-	ID           int
-	Username     string
-	Role         string
-	Email        string `gorm:"unique"`
-	PasswordHash string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	DeletedAt    gorm.DeletedAt `gorm:"index"`
+	ID             int
+	Username       string `gorm:"unique"`
+	Role           string
+	Email          string `gorm:"unique"`
+	PasswordHash   string
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	DeletedAt      gorm.DeletedAt `gorm:"index"`
+	EmailConfirmed bool
 }
 
 func (u *User) SetPassword(password string) error {

@@ -7,7 +7,7 @@ import (
 )
 
 func Project(route *gin.Engine, projectController Controllers.ProjectController) {
-	routes := route.Group("/api/project", Middleware.RequiresAuth())
+	routes := route.Group("/api/projects", Middleware.RequiresAuth())
 	{
 		routes.GET("/", projectController.Index)
 		routes.GET("/:id", projectController.Show)

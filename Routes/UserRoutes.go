@@ -10,5 +10,6 @@ func User(route *gin.Engine, userController Controllers.UserController) {
 	{
 		routes.POST("/login", userController.Login)
 		routes.POST("/register", userController.Register)
+		routes.GET("/confirmation", userController.ConfirmEmail)
 	}
 }

@@ -4,6 +4,8 @@ import (
 	"Golang/DTO"
 	"Golang/Models"
 	"Golang/Repository"
+	"Golang/utils"
+	"Golang/utils/Meta"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -24,8 +26,23 @@ type (
 )
 
 func (p ProjectControllerImpl) Index(ctx *gin.Context) {
+	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(ctx.DefaultQuery("limit", "10"))
+	projects, totalRecords, err := p.repository.Paginate(page, limit)
+
+	if err != nil {
+		utils.InternalServerErrorResponse(ctx, err)
+		return
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
-		"projects": p.repository.GetAll(),
+		"projects": projects,
+		"pagination": Meta.PaginationMeta{
+			TotalRecords:   totalRecords,
+			TotalPages:     (totalRecords + limit - 1) / limit,
+			CurrentPage:    page,
+			RecordsPerPage: limit,
+		},
 	})
 }
 
@@ -44,6 +61,7 @@ func (p ProjectControllerImpl) Create(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),
 		})
+		return
 	}
 
 	p.repository.Create(&project)
@@ -61,6 +79,7 @@ func (p ProjectControllerImpl) Update(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),
 		})
+		return
 	}
 
 	project := p.repository.Find(id)

@@ -4,6 +4,7 @@ import (
 	"Golang/Http/Controllers"
 	"Golang/Repository"
 	"Golang/Routes"
+	"Golang/Services"
 	"Golang/setup"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -19,10 +20,12 @@ func init() {
 
 func main() {
 	var (
-		projectRepository  = Repository.NewProjectRepository(db)
-		userRepository     = Repository.NewUserRepository(db)
-		userController     = Controllers.NewUserController(userRepository)
-		projectsController = Controllers.NewProjectController(projectRepository)
+		projectRepository        = Repository.NewProjectRepository(db)
+		emailConfirmationService = Services.NewEmailConfirmationService()
+		userRepository           = Repository.NewUserRepository(db)
+		userService              = Services.NewUserService(userRepository, emailConfirmationService)
+		userController           = Controllers.NewUserController(userRepository, emailConfirmationService, userService)
+		projectsController       = Controllers.NewProjectController(projectRepository)
 	)
 
 	server := gin.Default()

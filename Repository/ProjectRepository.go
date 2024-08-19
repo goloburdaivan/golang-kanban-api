@@ -8,6 +8,7 @@ import (
 type (
 	ProjectRepository interface {
 		GetAll() []Models.Project
+		Paginate(page int, limit int) ([]Models.Project, int, error)
 		Find(id int) *Models.Project
 		Create(project *Models.Project) *Models.Project
 		Update(project *Models.Project) *Models.Project
@@ -21,12 +22,21 @@ type (
 
 func (p ProjectRepositoryImpl) GetAll() []Models.Project {
 	var projects []Models.Project
-	db := p.db.Find(&projects)
+	db := p.db.Preload("User").Find(&projects)
 	if db.Error != nil {
 		panic(db.Error)
 	}
 
 	return projects
+}
+
+func (p ProjectRepositoryImpl) Paginate(page int, limit int) ([]Models.Project, int, error) {
+	var projects []Models.Project
+	var count int64
+	offset := (page - 1) * limit
+	db := p.db.Preload("User").Offset(offset).Limit(limit).Find(&projects)
+	p.db.Model(&Models.Project{}).Count(&count)
+	return projects, int(count), db.Error
 }
 
 func (p ProjectRepositoryImpl) Find(id int) *Models.Project {

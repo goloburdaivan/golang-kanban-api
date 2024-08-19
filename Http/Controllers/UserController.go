@@ -1,10 +1,12 @@
 package Controllers
 
 import (
+	"Golang/DTO"
 	"Golang/Http/Requests"
 	"Golang/Repository"
-	"Golang/utils"
+	"Golang/Services"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 )
 
@@ -12,10 +14,13 @@ type (
 	UserController interface {
 		Login(c *gin.Context)
 		Register(c *gin.Context)
+		ConfirmEmail(c *gin.Context)
 	}
 
 	UserControllerImpl struct {
-		repository Repository.UserRepository
+		repository          Repository.UserRepository
+		confirmationService Services.EmailConfirmationService
+		userService         Services.UserService
 	}
 )
 
@@ -26,20 +31,11 @@ func (u UserControllerImpl) Login(c *gin.Context) {
 		return
 	}
 
-	user, err := u.repository.FindByEmail(request.Login)
+	user, token, err := u.userService.AuthenticateUser(request.Login, request.Password)
 	if err != nil {
-		utils.InternalServerErrorResponse(c, err)
-		return
-	}
-
-	if !user.CheckPassword(request.Password) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Incorrect password"})
-		return
-	}
-
-	token, err := utils.GenerateAuthToken(user)
-	if err != nil {
-		utils.InternalServerErrorResponse(c, err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
 		return
 	}
 
@@ -57,17 +53,53 @@ func (u UserControllerImpl) Register(c *gin.Context) {
 		return
 	}
 
-	user, err := u.repository.Create(request.Username, request.Login, request.Password)
+	user, token, err := u.userService.RegisterUser(request.Username, request.Login, request.Password)
 	if err != nil {
-		utils.InternalServerErrorResponse(c, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	go func() {
+		err := u.confirmationService.Send(&DTO.ConfirmationDTO{
+			User:  *user,
+			Token: token,
+		})
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 
 	c.JSON(http.StatusCreated, gin.H{
 		"user": user,
 	})
 }
 
-func NewUserController(repository Repository.UserRepository) UserController {
-	return &UserControllerImpl{repository: repository}
+func (u UserControllerImpl) ConfirmEmail(c *gin.Context) {
+	token := c.Query("token")
+	if token == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "token required"})
+		return
+	}
+
+	err := u.userService.ConfirmUserEmail(token)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid token",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Thank you for confirming your email!"})
+}
+
+func NewUserController(
+	repository Repository.UserRepository,
+	confirmationService Services.EmailConfirmationService,
+	userService Services.UserService,
+) UserController {
+	return &UserControllerImpl{
+		repository:          repository,
+		confirmationService: confirmationService,
+		userService:         userService,
+	}
 }

@@ -7,4 +7,6 @@ type Project struct {
 	ID          int
 	Name        string `json:"name" binding:"required"`
 	Description string `json:"description" binding:"required"`
+	UserID      int    `json:"user_id" binding:"required"`
+	User        User
 }

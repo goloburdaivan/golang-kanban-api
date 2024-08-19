@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Email Confirmation</title>
+</head>
+<body>
+<h1>Hello {{.User.Username}},</h1>
+<p>Please confirm your email by clicking the link below:</p>
+<a href="http://localhost:8080/api/confirmation?token={{.Token}}">Click</a>
+</body>
+</html>
