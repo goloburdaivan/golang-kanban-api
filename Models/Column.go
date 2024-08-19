@@ -4,9 +4,8 @@ import "gorm.io/gorm"
 
 type Column struct {
 	gorm.Model
-	ID        int
-	Name      string
-	Position  int
-	ProjectID int
+	Name      string `json:"name"`
+	Position  int    `json:"position"`
+	ProjectID int    `json:"project_id"`
 	Project   Project
 }

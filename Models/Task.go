@@ -12,8 +12,10 @@ type Task struct {
 	Status      string    `json:"status" binding:"required"`
 	AssigneeID  int       `json:"assignee_id" binding:"required"`
 	CreatorID   int       `json:"creator_id" binding:"required"`
+	ColumnID    int       `json:"column_id" binding:"required"`
 	Priority    int       `json:"priority" binding:"required"`
 	DueDate     time.Time `json:"due_date" binding:"required"`
 	Assignee    User
 	Creator     User
+	Column      Column
 }

@@ -36,7 +36,7 @@ func (p ProjectControllerImpl) Index(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"projects": projects,
+		"paginated": projects,
 		"pagination": Meta.PaginationMeta{
 			TotalRecords:   totalRecords,
 			TotalPages:     (totalRecords + limit - 1) / limit,

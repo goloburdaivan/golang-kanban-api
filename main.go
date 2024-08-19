@@ -2,9 +2,7 @@ package main
 
 import (
 	"Golang/Http/Controllers"
-	"Golang/Repository"
 	"Golang/Routes"
-	"Golang/Services"
 	"Golang/setup"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -19,17 +17,19 @@ func init() {
 }
 
 func main() {
-	var (
-		projectRepository        = Repository.NewProjectRepository(db)
-		emailConfirmationService = Services.NewEmailConfirmationService()
-		userRepository           = Repository.NewUserRepository(db)
-		userService              = Services.NewUserService(userRepository, emailConfirmationService)
-		userController           = Controllers.NewUserController(userRepository, emailConfirmationService, userService)
-		projectsController       = Controllers.NewProjectController(projectRepository)
-	)
+
+	diContainer := setup.BuildContainer(db)
 
 	server := gin.Default()
-	Routes.Project(server, projectsController)
-	Routes.User(server, userController)
+	diContainer.Invoke(func(
+		userController Controllers.UserController,
+		projectsController Controllers.ProjectController,
+		taskController Controllers.TaskController,
+	) {
+		Routes.Project(server, projectsController)
+		Routes.User(server, userController)
+		Routes.Task(server, taskController)
+	})
+
 	server.Run()
 }
