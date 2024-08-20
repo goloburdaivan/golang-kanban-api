@@ -31,7 +31,7 @@ type (
 func (t TaskControllerImpl) Index(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
-	tasks, totalRecords, err := t.repository.Paginate(page, limit)
+	tasks, totalRecords, err := t.repository.PaginateWith(page, limit, "Column.Project")
 
 	if err != nil {
 		utils.InternalServerErrorResponse(c, err)
@@ -68,7 +68,16 @@ func (t TaskControllerImpl) Create(c *gin.Context) {
 }
 
 func (t TaskControllerImpl) Show(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	task, err := t.repository.FindByIdWith(id, "Column.Project", "Assignee", "Creator")
+	if err != nil {
+		utils.InternalServerErrorResponse(c, err)
+		return
+	}
 
+	c.JSON(http.StatusOK, gin.H{
+		"task": task,
+	})
 }
 
 func (t TaskControllerImpl) Update(c *gin.Context) {

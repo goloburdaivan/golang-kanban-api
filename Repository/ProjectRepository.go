@@ -2,13 +2,14 @@ package Repository
 
 import (
 	"Golang/Models"
+	"Golang/utils/Database"
 	"gorm.io/gorm"
 )
 
 type (
 	ProjectRepository interface {
 		GetAll() []Models.Project
-		Paginate(page int, limit int) ([]Models.Project, int, error)
+		PaginateWith(page int, limit int, relations ...string) ([]Models.Project, int, error)
 		Find(id int) *Models.Project
 		Create(project *Models.Project) *Models.Project
 		Update(project *Models.Project) *Models.Project
@@ -17,6 +18,7 @@ type (
 
 	ProjectRepositoryImpl struct {
 		db *gorm.DB
+		Paginator
 	}
 )
 
@@ -30,13 +32,15 @@ func (p ProjectRepositoryImpl) GetAll() []Models.Project {
 	return projects
 }
 
-func (p ProjectRepositoryImpl) Paginate(page int, limit int) ([]Models.Project, int, error) {
+func (p ProjectRepositoryImpl) PaginateWith(page int, limit int, relations ...string) ([]Models.Project, int, error) {
 	var projects []Models.Project
 	var count int64
-	offset := (page - 1) * limit
-	db := p.db.Preload("User").Offset(offset).Limit(limit).Find(&projects)
+	result := p.paginate(page, limit)
+	Database.LoadRelations(result, relations...)
+	result.Find(&projects)
+
 	p.db.Model(&Models.Project{}).Count(&count)
-	return projects, int(count), db.Error
+	return projects, int(count), result.Error
 }
 
 func (p ProjectRepositoryImpl) Find(id int) *Models.Project {
@@ -65,6 +69,6 @@ func (p ProjectRepositoryImpl) Delete(id int) *Models.Project {
 	return project
 }
 
-func NewProjectRepository(db *gorm.DB) ProjectRepository {
-	return &ProjectRepositoryImpl{db: db}
+func NewProjectRepository(db *gorm.DB, paginator *Paginator) ProjectRepository {
+	return &ProjectRepositoryImpl{db: db, Paginator: *paginator}
 }

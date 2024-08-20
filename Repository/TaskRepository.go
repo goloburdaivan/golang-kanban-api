@@ -2,22 +2,33 @@ package Repository
 
 import (
 	"Golang/Models"
+	"Golang/utils/Database"
 	"gorm.io/gorm"
 )
 
 type (
 	TaskRepository interface {
-		Paginate(page, limit int) ([]Models.Task, int, error)
+		PaginateWith(page, limit int, relations ...string) ([]Models.Task, int, error)
 		Create(task *Models.Task) (*Models.Task, error)
 		Update(task *Models.Task) (*Models.Task, error)
 		Delete(id int) error
 		FindById(id int) (Models.Task, error)
+		FindByIdWith(id int, relations ...string) (Models.Task, error)
 	}
 
 	TaskRepositoryImpl struct {
 		db *gorm.DB
+		Paginator
 	}
 )
+
+func (t TaskRepositoryImpl) FindByIdWith(id int, relations ...string) (Models.Task, error) {
+	var task Models.Task
+	result := t.db.Model(&Models.Task{}).Where("id = ?", id)
+	Database.LoadRelations(result, relations...)
+	result.Find(&task)
+	return task, result.Error
+}
 
 func (t TaskRepositoryImpl) FindById(id int) (Models.Task, error) {
 	var task Models.Task
@@ -25,12 +36,16 @@ func (t TaskRepositoryImpl) FindById(id int) (Models.Task, error) {
 	return task, result.Error
 }
 
-func (t TaskRepositoryImpl) Paginate(page, limit int) ([]Models.Task, int, error) {
+func (t TaskRepositoryImpl) PaginateWith(page, limit int, relations ...string) ([]Models.Task, int, error) {
 	var tasks []Models.Task
 	var totalRecords int64
+
 	t.db.Model(&Models.Task{}).Count(&totalRecords)
-	err := t.db.Limit(limit).Offset((page - 1) * limit).Find(&tasks).Error
-	return tasks, int(totalRecords), err
+	result := t.paginate(page, limit)
+	Database.LoadRelations(result, relations...)
+	result.Find(&tasks)
+
+	return tasks, int(totalRecords), result.Error
 }
 
 func (t TaskRepositoryImpl) Create(task *Models.Task) (*Models.Task, error) {
@@ -48,6 +63,6 @@ func (t TaskRepositoryImpl) Delete(id int) error {
 	return result.Error
 }
 
-func NewTaskRepository(db *gorm.DB) TaskRepository {
-	return &TaskRepositoryImpl{db: db}
+func NewTaskRepository(db *gorm.DB, paginator *Paginator) TaskRepository {
+	return &TaskRepositoryImpl{db: db, Paginator: *paginator}
 }

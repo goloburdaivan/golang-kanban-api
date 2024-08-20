@@ -28,7 +28,7 @@ type (
 func (p ProjectControllerImpl) Index(ctx *gin.Context) {
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(ctx.DefaultQuery("limit", "10"))
-	projects, totalRecords, err := p.repository.Paginate(page, limit)
+	projects, totalRecords, err := p.repository.PaginateWith(page, limit)
 
 	if err != nil {
 		utils.InternalServerErrorResponse(ctx, err)

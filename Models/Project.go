@@ -8,5 +8,5 @@ type Project struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	UserID      int    `json:"user_id"`
-	User        User
+	User        *User  `json:"owner,omitempty"`
 }

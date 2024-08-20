@@ -15,7 +15,7 @@ type Task struct {
 	ColumnID    int       `json:"column_id" binding:"required"`
 	Priority    int       `json:"priority" binding:"required"`
 	DueDate     time.Time `json:"due_date" binding:"required"`
-	Assignee    User
-	Creator     User
-	Column      Column
+	Assignee    *User     `json:"assignee,omitempty"`
+	Creator     *User     `json:"creator,omitempty"`
+	Column      *Column   `json:"column,omitempty"`
 }

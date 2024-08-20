@@ -17,6 +17,7 @@ func BuildContainer(db *gorm.DB) *dig.Container {
 	})
 
 	// Repositories
+	container.Provide(Repository.NewPaginator)
 	container.Provide(Repository.NewProjectRepository)
 	container.Provide(Repository.NewUserRepository)
 	container.Provide(Repository.NewTaskRepository)
